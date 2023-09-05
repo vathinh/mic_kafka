@@ -26,5 +26,9 @@ public interface UserService {
     List<UserEntity> findAllUsersByTitleIds(List<Integer> ids);
     void updateKeyCloakId(Integer id, String keycloakId);
 
+    void createKafka(UserRequest userRequest);
+
+    void updateKCId(UserRequest userRequest);
+
 
 }

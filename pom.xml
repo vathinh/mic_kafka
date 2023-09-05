@@ -20,6 +20,7 @@
         <module>discovery-server</module>
         <module>common-service</module>
         <module>user-service</module>
+        <module>account-service</module>
     </modules>
 
     <properties>
