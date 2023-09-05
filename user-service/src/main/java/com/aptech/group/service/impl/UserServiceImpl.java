@@ -4,12 +4,15 @@ import com.aptech.group.dto.user.UserCriteria;
 import com.aptech.group.dto.user.UserRequest;
 import com.aptech.group.dto.user.UserResponse;
 import com.aptech.group.dto.user.UserUpdateRequest;
+import com.aptech.group.event.EventProducer;
 import com.aptech.group.mapstruct.UserMapper;
 import com.aptech.group.model.UserEntity;
 import com.aptech.group.repository.UserRepository;
 import com.aptech.group.service.AccountService;
 import com.aptech.group.service.MessageService;
 import com.aptech.group.service.UserService;
+import com.aptech.group.utils.Constant;
+import com.google.gson.Gson;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -46,6 +49,10 @@ public class UserServiceImpl implements UserService {
 
     private final AccountService accountService;
     private static final String DEFAULT_SORT_FIELD = "id";
+
+    private final EventProducer eventProducer;
+
+    private Gson gson = new Gson();
 
 
     @Override
@@ -115,6 +122,23 @@ public class UserServiceImpl implements UserService {
             p.setKeycloakId(keycloakId);
             userRepository.save(p);
         });
+    }
+
+    @Override
+    @Transactional
+    public void createKafka(UserRequest userRequest) {
+        userRepository.save(mapper.toEntity(userRequest));
+        eventProducer.send(Constant.ACCOUNT_CREATING_TOPIC, gson.toJson(userRequest));
+    }
+
+    @Override
+    public void updateKCId(UserRequest userRequest) {
+        Optional<UserEntity> existed = userRepository.findByEmail(userRequest.getEmail());
+        if (existed.isPresent()) {
+            UserEntity userEntity = existed.get();
+            userEntity.setKeycloakId(userRequest.getKeycloakId());
+            userRepository.save(userEntity);
+        }
     }
 
     private Specification<UserEntity> buildSpecification(UserCriteria userCriteria) {

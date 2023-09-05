@@ -50,4 +50,9 @@ public class UserServiceController {
     public void deleteUsers(Map<Integer, Long> ids) {
         userService.deleteUsers(ids);
     }
+
+    @PostMapping("createKC")
+    public void createKC(@RequestBody UserRequest userRequest) {
+        userService.createKafka(userRequest);
+    }
 }

@@ -19,4 +19,6 @@ public interface UserRepository extends JpaRepository<UserEntity, Integer> {
 
     Optional<UserEntity> findByIdAndDeleteFlag(Integer id, boolean b);
 
+    Optional<UserEntity> findByEmail(String email);
+
 }
