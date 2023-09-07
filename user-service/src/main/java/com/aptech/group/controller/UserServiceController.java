@@ -37,6 +37,7 @@ public class UserServiceController {
     }
 
     @GetMapping("getByCriteria")
+    @PreAuthorize("hasAnyRole(@environment.getProperty('user.read'), @environment.getProperty('user.full'))")
     public Page<UserResponse> getAllByCriteria(UserCriteria userCriteria) {
         return userService.getAllByCriteria(userCriteria);
     }

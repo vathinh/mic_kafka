@@ -23,6 +23,10 @@ services:
   keycloak-mysql:
     container_name: keycloak-mysql
     image: mysql:8.0
+    expose:
+      - "3306"
+    ports:
+      - "3306:3306"
     volumes:
       - ./mysql_keycloak_data:/var/lib/mysql
     environment:
@@ -46,6 +50,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
+      - ./keycloak/realms/export:/opt/keycloak/data/export
       - ./keycloak/realms/import:/opt/keycloak/data/import
 #      - ./keycloak/themes:/opt/keycloak/themes
     depends_on:
@@ -60,69 +65,124 @@ services:
       - "9411:9411"
 
   ## Eureka Server
-  discovery-server:
-    image: sem4/discovery-server:latest
-    container_name: discovery-server
-    ports:
-      - "8761:8761"
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-    depends_on:
-      - zipkin
+#  discovery-server:
+#    image: sem4/discovery-server:latest
+#    container_name: discovery-server
+#    ports:
+#      - "8761:8761"
+#    environment:
+#      - SPRING_PROFILES_ACTIVE=docker
+#    depends_on:
+#      - zipkin
 
-  api-gateway:
-    image: sem4/api-gateway:latest
-    container_name: api-gateway
-    ports:
-      - "8181:8080"
-    expose:
-      - "8181"
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY= TRACE
-    depends_on:
-      - zipkin
-      - discovery-server
-      - keycloak
+#  api-gateway:
+#    image: sem4/api-gateway:latest
+#    container_name: api-gateway
+#    ports:
+#      - "8181:8080"
+#    expose:
+#      - "8181"
+#    environment:
+#      - SPRING_PROFILES_ACTIVE=docker
+#      - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY= TRACE
+#    depends_on:
+#      - zipkin
+#      - discovery-server
+#      - keycloak
 
   ## User-Service Docker Compose Config
-  user-service:
-    container_name: user-service
-    image: sem4/user-service:latest
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-user:5431/user-service
-      - SPRING_LIQUIBASE_URL=jdbc:postgresql://postgres-user:5431/user-service
-      - SPRING_LIQUIBASE_CHANGE_LOG=classpath:db.changelog/db.changelog-master.xml
-      - KEYCLOAK_AUTH-SERVER-URL=http://keycloak:8080
-    depends_on:
-      - postgres-user
-      - discovery-server
-      - api-gateway
+#  user-service:
+#    container_name: user-service
+#    image: sem4/user-service:latest
+#    environment:
+#      - SPRING_PROFILES_ACTIVE=docker
+#      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-user:5431/user-service
+#      - SPRING_LIQUIBASE_URL=jdbc:postgresql://postgres-user:5431/user-service
+#      - SPRING_LIQUIBASE_CHANGE_LOG=classpath:db.changelog/db.changelog-master.xml
+#      - KEYCLOAK_AUTH-SERVER-URL=http://keycloak:8080
+#    depends_on:
+#      - postgres-user
+#      - discovery-server
+#      - api-gateway
 
 
   ## Prometheus
-  prometheus:
-    image: prom/prometheus:v2.37.1
-    container_name: prometheus
-    restart: always
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-    depends_on:
-      - user-service
+#  prometheus:
+#    image: prom/prometheus:v2.37.1
+#    container_name: prometheus
+#    restart: always
+#    ports:
+#      - "9090:9090"
+#    volumes:
+#      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+#    depends_on:
+#      - user-service
+#
+#  grafana:
+#    image: grafana/grafana-oss:8.5.2
+#    container_name: grafana
+#    restart: always
+#    ports:
+#      - "3000:3000"
+#    links:
+#      - prometheus:prometheus
+#    volumes:
+#      - ./grafana:/var/lib/grafana
+#    environment:
+#      - GF_SECURITY_ADMIN_USER=admin
+#      - GF_SECURITY_ADMIN_PASSWORD=password
 
-  grafana:
-    image: grafana/grafana-oss:8.5.2
-    container_name: grafana
-    restart: always
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:6.1.1
+    hostname: zookeeper
+    container_name: zookeeper
     ports:
-      - "3000:3000"
-    links:
-      - prometheus:prometheus
-    volumes:
-      - ./grafana:/var/lib/grafana
+      - "2181:2181"
     environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=password
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  broker:
+    image: confluentinc/cp-server:6.1.1
+    hostname: broker
+    container_name: broker
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "9101:9101"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: localhost
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker:29092
+      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
+      CONFLUENT_METRICS_ENABLE: 'true'
+      CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
+
+  control-center:
+    image: confluentinc/cp-enterprise-control-center:6.1.1
+    hostname: control-center
+    container_name: control-center
+    depends_on:
+      - broker
+    ports:
+      - "9021:9021"
+    environment:
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: 'broker:29092'
+      CONTROL_CENTER_REPLICATION_FACTOR: 1
+      CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: 1
+      CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS: 1
+      CONFLUENT_METRICS_TOPIC_REPLICATION: 1
+      PORT: 9021

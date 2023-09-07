@@ -1,0 +1,76 @@
+keycloak:
+  auth-server-url: http://localhost:8080
+  realm: sem4Infras
+  cors: 'true'
+  cors-max-age: '0'
+  bearer-only: 'true'
+  ssl-required: external
+  resource: login-app
+  principal-attribute: preferred_username
+  public-client: 'true'
+  use-resource-role-mappings: 'true'
+spring:
+  main:
+    allow-bean-definition-overriding: 'true'
+  liquibase:
+    change-log: classpath:db.changelog/db.changelog-master.xml
+    password: admin
+    user: admin
+    url: jdbc:postgresql://localhost:5431/user-service
+  jpa:
+    hibernate:
+      ddl-auto: none
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    password: admin
+    username: admin
+    url: jdbc:postgresql://localhost:5431/user-service
+  config:
+    import: roles.properties
+  application:
+    name: user-service
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:8080/realms/sem4Infras/protocol/openid-connect/certs
+#  kafka:
+#    producer:
+#      retries: '3'
+#      batch-size: '16384'
+#      buffer-memory: '33554432'
+  kafka:
+    producer:
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      bootstrap-servers: localhost:9092
+    consumer:
+      auto-offset-reset: earliest
+      bootstrap-servers: localhost:9092
+      group-id: creating-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      properties:
+        spring:
+          json:
+            trusted:
+              packages: '*'
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+
+server:
+  port: '8081'
+#logging:
+#  pattern:
+#    level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://eureka:password@localhost:8761/eureka
+admin:
+  keycloak:
+    client-secret: 'TrREn6V2EPhRxX6XtVFEKSojm6zXxLbL'
+    client-id: backend-client
+
+kafka:
+  bootstrap:
+    servers: localhost:9092
+  consumer-group-id: userService-groupId
