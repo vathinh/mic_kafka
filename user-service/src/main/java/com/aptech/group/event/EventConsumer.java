@@ -5,7 +5,6 @@ import com.aptech.group.service.UserService;
 import com.google.gson.Gson;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.kafka.receiver.KafkaReceiver;
 import reactor.kafka.receiver.ReceiverOptions;
@@ -21,6 +20,7 @@ public class EventConsumer {
     Gson gson = new Gson();
     private UserService userService;
     public EventConsumer(ReceiverOptions<String, String> receiverOptions){
+        log.info("Profile Onboarded event");
         KafkaReceiver.create(receiverOptions.subscription(Collections.singleton(Constant.ACCOUNT_CREATED_TOPIC)))
                 .receive().subscribe(this::profileOnboarded);
     }

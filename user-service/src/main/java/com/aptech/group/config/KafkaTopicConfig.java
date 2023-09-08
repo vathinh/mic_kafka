@@ -8,8 +8,8 @@ import org.springframework.kafka.config.TopicBuilder;
 @Configuration
 public class KafkaTopicConfig {
     @Bean
-    public NewTopic createdTopic(){
-        return TopicBuilder.name("createdTopic")
+    public NewTopic accountCreatingTopic(){
+        return TopicBuilder.name("accountCreating")
                 .build();
     }
 }

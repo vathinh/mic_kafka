@@ -47,7 +47,7 @@ spring:
     consumer:
       auto-offset-reset: earliest
       bootstrap-servers: localhost:9092
-      group-id: creating-group
+      group-id: created-group
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       properties:
         spring:

@@ -1,6 +1,6 @@
 package com.aptech.group.service.impl;
 
-import com.aptech.group.dto.UserRequest;
+import com.aptech.group.dto.user.UserRequest;
 import com.aptech.group.service.AccountService;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.keycloak.OAuth2Constants;
@@ -14,6 +14,7 @@ import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.ws.rs.NotFoundException;
@@ -22,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Service
 public class AccountServiceImpl implements AccountService {
     @Value("${keycloak.auth-server-url}")
     private String keycloakAdminUrl;

@@ -23,21 +23,48 @@ spring:
       resourceserver:
         jwt:
           jwk-set-uri: http://localhost:8080/realms/sem4Infras/protocol/openid-connect/certs
+#  kafka:
+#    producer:
+#      retries: '3'
+#      batch-size: '16384'
+#      buffer-memory: '33554432'
+
   kafka:
     producer:
-      retries: '3'
-      batch-size: '16384'
-      buffer-memory: '33554432'
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      bootstrap-servers: localhost:9092
+    consumer:
+      auto-offset-reset: earliest
+      bootstrap-servers: localhost:9092
+      group-id: creating-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      properties:
+        spring:
+          json:
+            trusted:
+              packages: '*'
+          deserializer:
+            value:
+              delegate:
+                class: org.springframework.kafka.support.serializer.JsonDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+#          json:
+#            trusted:
+#              packages: '*'
+#        value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+
+
 
 server:
   port: '8082'
-logging:
-  pattern:
-    level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'
-  level:
-    root:
-    - debug
-    - trace
+#logging:
+#  pattern:
+#    level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'
+#  level:
+#    root:
+#    - debug
+#    - trace
 eureka:
   client:
     serviceUrl:

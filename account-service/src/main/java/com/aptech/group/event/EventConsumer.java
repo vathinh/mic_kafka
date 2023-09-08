@@ -1,6 +1,6 @@
 package com.aptech.group.event;
 
-import com.aptech.group.dto.UserRequest;
+import com.aptech.group.dto.user.UserRequest;
 import com.aptech.group.service.AccountService;
 import com.aptech.group.utils.Constant;
 import com.google.gson.Gson;
@@ -26,6 +26,7 @@ public class EventConsumer {
     EventProducer eventProducer;
 
     public EventConsumer(ReceiverOptions<String,String> receiverOptions){
+        log.info("Profile Onboarding event");
         KafkaReceiver.create(receiverOptions.subscription(Collections.singleton(Constant.ACCOUNT_CREATING_TOPIC)))
                 .receive().subscribe(this::profileOnboarding);
     }

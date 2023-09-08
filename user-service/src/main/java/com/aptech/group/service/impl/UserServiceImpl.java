@@ -16,6 +16,7 @@ import com.google.gson.Gson;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -51,6 +52,9 @@ public class UserServiceImpl implements UserService {
     private static final String DEFAULT_SORT_FIELD = "id";
 
     private final EventProducer eventProducer;
+
+    @Autowired
+    private KafkaProducer kafkaProducer;
 
     private Gson gson = new Gson();
 
@@ -128,7 +132,8 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void createKafka(UserRequest userRequest) {
         userRepository.save(mapper.toEntity(userRequest));
-        eventProducer.send(Constant.ACCOUNT_CREATING_TOPIC, gson.toJson(userRequest));
+//        eventProducer.send(Constant.ACCOUNT_CREATING_TOPIC, gson.toJson(userRequest));
+        kafkaProducer.sendMessage(userRequest);
     }
 
     @Override
