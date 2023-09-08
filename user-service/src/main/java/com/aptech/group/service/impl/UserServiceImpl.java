@@ -4,14 +4,13 @@ import com.aptech.group.dto.user.UserCriteria;
 import com.aptech.group.dto.user.UserRequest;
 import com.aptech.group.dto.user.UserResponse;
 import com.aptech.group.dto.user.UserUpdateRequest;
-import com.aptech.group.event.EventProducer;
+import com.aptech.group.exception.ResourceNotFoundException;
 import com.aptech.group.mapstruct.UserMapper;
 import com.aptech.group.model.UserEntity;
 import com.aptech.group.repository.UserRepository;
 import com.aptech.group.service.AccountService;
 import com.aptech.group.service.MessageService;
 import com.aptech.group.service.UserService;
-import com.aptech.group.utils.Constant;
 import com.google.gson.Gson;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,12 +50,12 @@ public class UserServiceImpl implements UserService {
     private final AccountService accountService;
     private static final String DEFAULT_SORT_FIELD = "id";
 
-    private final EventProducer eventProducer;
-
     @Autowired
     private KafkaProducer kafkaProducer;
 
-    private Gson gson = new Gson();
+    private ResourceNotFoundException buildNotFoundException() {
+        return new ResourceNotFoundException(messageService.getMessage("not-found.user"));
+    }
 
 
     @Override
@@ -72,9 +71,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public UserResponse getById(Integer id) {
-        return userRepository.findById(id).map(mapper::toResponse).orElse(null);
+        UserEntity userEntity = userRepository.findById(id).orElseThrow(this::buildNotFoundException);
+        return mapper.toResponse(userEntity);
     }
 
     @Override
@@ -132,7 +132,6 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void createKafka(UserRequest userRequest) {
         userRepository.save(mapper.toEntity(userRequest));
-//        eventProducer.send(Constant.ACCOUNT_CREATING_TOPIC, gson.toJson(userRequest));
         kafkaProducer.sendMessage(userRequest);
     }
 

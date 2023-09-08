@@ -30,6 +30,12 @@ public class UserServiceController {
         return userService.getAll();
     }
 
+    @GetMapping("{id}")
+    @PreAuthorize("hasAnyRole(@environment.getProperty('user.read'), @environment.getProperty('user.full'))")
+    public UserResponse getById(@PathVariable Integer id) {
+        return userService.getById(id);
+    }
+
     @PostMapping
     @PreAuthorize("hasAnyRole(@environment.getProperty('user.create'), @environment.getProperty('user.full'))")
     public void create(@RequestBody UserRequest userRequest) {

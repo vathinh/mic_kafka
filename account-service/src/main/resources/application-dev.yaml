@@ -76,5 +76,4 @@ admin:
 
 kafka:
   bootstrap:
-    servers: localhost:9092
-  consumer-group-id: accountService1-groupId
+

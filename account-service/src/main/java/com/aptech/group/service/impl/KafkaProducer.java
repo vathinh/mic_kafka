@@ -1,6 +1,6 @@
 package com.aptech.group.service.impl;
 
-import com.aptech.group.dto.UserRequest;
+import com.aptech.group.dto.user.UserRequest;
 import com.aptech.group.utils.Constant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +23,7 @@ public class KafkaProducer {
 
         Message<UserRequest> message = MessageBuilder
                 .withPayload(data)
-                .setHeader(KafkaHeaders.TOPIC, Constant.ACCOUNT_CREATING_TOPIC)
+                .setHeader(KafkaHeaders.TOPIC, Constant.ACCOUNT_CREATED_TOPIC)
                 .build();
 
         kafkaTemplate.send(message);
